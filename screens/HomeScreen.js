@@ -9,6 +9,7 @@ import {
   View,
 } from 'react-native';
 import { WebBrowser } from 'expo';
+import { ExpoLinksView } from '@expo/samples';
 
 import { MonoText } from '../components/StyledText';
 
@@ -51,6 +52,8 @@ export default class HomeScreen extends React.Component {
               <Text style={styles.helpLinkText}>Help, it didn’t automatically reload!</Text>
             </TouchableOpacity>
           </View>
+
+          <ExpoLinksView />
         </ScrollView>
 
         <View style={styles.tabBarInfoContainer}>
