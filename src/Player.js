@@ -28,8 +28,9 @@ export default class Player {
 
         this.loadEnemies()
         userChanged(id).subscribe({
-          next(response) {
-            console.log('next', response.data.userChanged)
+          next(result) {
+            console.log('next', userChanged)
+            Store.setEnemy(result.data.userChanged)
           },
           error(err) {
             console.log('error', err)
@@ -43,7 +44,10 @@ export default class Player {
 
   async loadEnemies() {
     await getEnemies(Store.getPlayerId()).then(result => {
-      console.log('enemies', result.data.enemies)
+      const enemies = result.data.enemies
+      for (let i = 0, l = enemies.length; i < l; i++) {
+        Store.setEnemy(enemies[i])
+      }
     })
   }
 
@@ -71,7 +75,7 @@ export default class Player {
       const offsetX = pointer.pageX - pointer.target.offsetLeft
       const offsetY = pointer.pageY - pointer.target.offsetTop
 
-      console.log('event', event)
+      // console.log('event', event)
 
       switch (event.type) {
         case 'tap':
@@ -88,10 +92,11 @@ export default class Player {
 
           persistPlayerMove(this.id, direction).then(result => {
             // TODO check target coordinates
+            // console.log('persistPlayerMove', result.data.move)
             Store.confirmMovement()
           })
 
-          console.log('state', Store.state)
+          // console.log('state', Store.state)
           break
 
         case 'swipe':
@@ -110,7 +115,7 @@ export default class Player {
   }
 }
 
-const storePlayerData = data => {
+const storePlayerData = result => {
   const { id, x, y } = result.data.user
 
   Store.setPlayerId(id)

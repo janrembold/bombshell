@@ -29,7 +29,27 @@ class Store {
         width: null,
       },
       // all enemies
-      enemies: {},
+      enemies: {
+        // 123: {
+        //   user: {
+        //     id: 123,
+        //     x: 0,
+        //     y: 0,
+        //   },
+        //   element: null,
+        //   movement: {
+        //     start: {
+        //       x: 0,
+        //       y: 0,
+        //       timestamp: null,
+        //     },
+        //     target: {
+        //       x: 0,
+        //       y: 0,
+        //     },
+        //   },
+        // },
+      },
     }
   }
 
@@ -142,8 +162,11 @@ class Store {
   }
 
   setEnemy(enemy, timestamp) {
+    console.log('setEnemy: ', enemy)
+
     if (this.state.enemies.hasOwnProperty(enemy.id)) {
       const existingEnemy = this.state.enemies[enemy.id]
+      existingEnemy.user = enemy
       existingEnemy.movement = {
         start: {
           x: existingEnemy.x,
@@ -161,10 +184,12 @@ class Store {
       this.getPlaygroundElement().appendChild(enemyElement)
 
       this.state.enemies[enemy.id] = {
-        ...enemy,
+        user: enemy,
         element: enemyElement,
       }
     }
+
+    console.log('enemy state after update: ', this.state.enemies[enemy.id])
   }
 
   hasEnemies() {

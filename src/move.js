@@ -27,8 +27,8 @@ export const setDirection = direction => {
 export const getBackgroundPositionFromCoordinates = (x, y) => {
   const playgroundWidth = Store.getPlaygroundWidth()
   return {
-    backgroundX: playgroundWidth * settings.movementGrid * x,
-    backgroundY: playgroundWidth * settings.movementGrid * y,
+    backgroundX: -playgroundWidth * settings.movementGrid * x,
+    backgroundY: -playgroundWidth * settings.movementGrid * y,
   }
 }
 

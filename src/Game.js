@@ -51,20 +51,18 @@ export default class Game {
     }
   }
 
-  moveEnemy(enemy, timestemp) {
-    if (enemy.hasOwnProperty('movement')) {
+  moveEnemy(enemy, timestamp) {
+    if (false && enemy.hasOwnProperty('movement')) {
       // moving
       // TODO calculate new enemy coordinates
       // TODO calculate relative position to player coordinates
     } else {
       // not moving
-      // TODO calculate relative position to player coordinates
-
       const { x, y } = Store.getCoordinates()
-      const { x: enemyX, y: enemyY } = enemy
+      const { x: enemyX, y: enemyY } = enemy.user
 
-      const diffX = x - enemyX
-      const diffY = y - enemyY
+      const diffX = enemyX - x
+      const diffY = enemyY - y
 
       const playgroundWidth = Store.getPlaygroundWidth()
       const halfPlaygroundWidth = playgroundWidth / 2
@@ -75,7 +73,6 @@ export default class Game {
 
       enemy.element.style.left = `${left}px`
       enemy.element.style.top = `${top}px`
-      //   console.log('diff', diffX, diffY, left, top)
     }
   }
 
@@ -94,19 +91,19 @@ export default class Game {
 
     switch (direction) {
       case DIRECTION.north:
-        y += distanceToMove
-        break
-
-      case DIRECTION.south:
         y -= distanceToMove
         break
 
+      case DIRECTION.south:
+        y += distanceToMove
+        break
+
       case DIRECTION.east:
-        x -= distanceToMove
+        x += distanceToMove
         break
 
       case DIRECTION.west:
-        x += distanceToMove
+        x -= distanceToMove
         break
     }
 
