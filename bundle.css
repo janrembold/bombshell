@@ -1,0 +1,39 @@
+body {
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  color: #333;
+  font-weight: 300;
+  margin: 0;
+  padding: 0; }
+
+.playground {
+  position: relative;
+  width: 100%;
+  padding-top: 100%;
+  overflow: hidden; }
+  .playground--loaded {
+    background: url("img/moon.jpg") repeat 0 0; }
+
+.player {
+  position: absolute;
+  pointer-events: none;
+  width: 3%;
+  height: 3%;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: lime;
+  border-radius: 50%;
+  z-index: 1; }
+  .player_active {
+    background-color: orange; }
+
+.enemy {
+  position: absolute;
+  top: -1000px;
+  left: -1000px;
+  pointer-events: none;
+  width: 3%;
+  height: 3%;
+  transform: translate(-50%, -50%);
+  background-color: red;
+  border-radius: 50%; }
