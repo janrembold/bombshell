@@ -1,10 +1,10 @@
 import './styles.scss'
-import Game from './game'
 import Store from './Store'
-import { getCurrentTimestamp, getRandomInt } from './utils'
+import Player from './Player'
+import Game from './game'
 
 // TODO
-// - GraphQl -> enemy endpoint
+// - Start Button
 
 // - Apollo Request mit Timestamp
 // - Timestamp von Server einbeziehen
@@ -17,9 +17,16 @@ import { getCurrentTimestamp, getRandomInt } from './utils'
 // -
 
 const playground = document.querySelector('.playground')
+const playButton = document.querySelector('.playButton')
+const body = document.querySelector('body')
+
 Store.setPlaygroundElement(playground)
 Store.setPlaygroundWidth()
 // TODO add listener for width changes e.g. orientation change
 
-const game = new Game()
-game.start()
+Store.setPlayer(new Player())
+
+playButton.addEventListener('click', async () => {
+  await Store.getPlayer().startGame()
+  body.classList.add('playing')
+})

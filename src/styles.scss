@@ -11,25 +11,36 @@ body {
 .playground {
   position: relative;
   width: 100%;
+  max-width: 500px;
   padding-top: 100%;
   overflow: hidden;
 
   &--loaded {
     background: url('img/moon.jpg') repeat 0 0;
   }
+
+  + .button {
+    display: block;
+    margin: 10px auto 0;
+  }
 }
 
 .player {
-  position: absolute;
-  pointer-events: none;
-  width: $player_width;
-  height: $player_width;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: lime;
-  border-radius: 50%;
-  z-index: 1;
+  display: none;
+
+  .playing & {
+    display: block;
+    position: absolute;
+    pointer-events: none;
+    width: $player_width;
+    height: $player_width;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: lime;
+    border-radius: 50%;
+    z-index: 1;
+  }
 
   &_active {
     background-color: orange;
@@ -46,4 +57,24 @@ body {
   transform: translate(-50%, -50%);
   background-color: red;
   border-radius: 50%;
+}
+
+.button {
+  display: inline-block;
+  color: #fff;
+  background-color: #28a745;
+  border-color: #28a745;
+  font-weight: 400;
+  text-align: center;
+  white-space: nowrap;
+  vertical-align: middle;
+  user-select: none;
+  border: 1px solid transparent;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  line-height: 1.5;
+
+  .playing & {
+    display: none;
+  }
 }

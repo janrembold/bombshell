@@ -5,8 +5,8 @@ import { InMemoryCache } from 'apollo-cache-inmemory'
 import { ApolloClient } from 'apollo-client'
 import { WebSocketLink } from 'apollo-link-ws'
 import { HttpLink } from 'apollo-link-http'
-import { ApolloLink } from 'apollo-link'
 import { getMainDefinition } from 'apollo-utilities'
+import { RetryLink } from 'apollo-link-retry'
 
 const cache = new InMemoryCache()
 
@@ -21,7 +21,21 @@ const wsLink = new WebSocketLink({
   },
 })
 
-const link = ApolloLink.split(
+// TODO
+// https://www.apollographql.com/docs/link/composition/
+// https://www.npmjs.com/package/apollo-link-error
+// works - but without error handling
+const link = new RetryLink({
+  delay: {
+    initial: 300,
+    max: Infinity,
+    jitter: true,
+  },
+  attempts: {
+    max: 5,
+    retryIf: (error, _operation) => !!error,
+  },
+}).split(
   ({ query }) => {
     const { kind, operation } = getMainDefinition(query)
     return kind === 'OperationDefinition' && operation === 'subscription'
@@ -40,12 +54,25 @@ export const getUser = async () => {
       query User($id: Int) {
         user(id: $id) {
           id
+        }
+      }
+    `,
+    variables: { id: parseInt(localStorage.getItem('id')) },
+  })
+}
+
+export const initPlayer = async id => {
+  return await client.query({
+    query: gql`
+      query Start($id: Int!) {
+        start(id: $id) {
+          id
           x
           y
         }
       }
     `,
-    variables: { id: parseInt(localStorage.getItem('id')) },
+    variables: { id },
   })
 }
 
@@ -64,7 +91,7 @@ export const getEnemies = async id => {
   })
 }
 
-export const userChanged = id => {
+export const usersChanged = id => {
   return client.subscribe({
     variables: { id },
     query: gql`
@@ -73,6 +100,20 @@ export const userChanged = id => {
           id
           x
           y
+          direction
+        }
+      }
+    `,
+  })
+}
+
+export const gameOver = id => {
+  return client.subscribe({
+    variables: { id },
+    query: gql`
+      subscription GameOver($id: Int!) {
+        gameOver(id: $id) {
+          id
         }
       }
     `,
@@ -89,6 +130,7 @@ export const persistPlayerMove = async (id, direction) => {
           id
           x
           y
+          direction
         }
       }
     `,

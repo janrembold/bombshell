@@ -1,9 +1,11 @@
-import { getCurrentTimestamp } from './utils'
+import { addEnemyElement } from './htmlElement'
 
 class Store {
   constructor() {
     this.state = {
+      game: null,
       player: {
+        id: null,
         // the player class object
         object: null,
         // live coordinates of player
@@ -20,7 +22,6 @@ class Store {
             y: null,
             timestamp: null,
           },
-          target: { x: null, y: null },
         },
       },
       // the games' playground
@@ -38,14 +39,11 @@ class Store {
         //   },
         //   element: null,
         //   movement: {
+        //     direction: null,
         //     start: {
         //       x: 0,
         //       y: 0,
         //       timestamp: null,
-        //     },
-        //     target: {
-        //       x: 0,
-        //       y: 0,
         //     },
         //   },
         // },
@@ -67,6 +65,14 @@ class Store {
 
   setPlayer(player) {
     this.state.player.object = player
+  }
+
+  getGame() {
+    return this.state.game
+  }
+
+  setGame(game) {
+    this.state.game = game
   }
 
   getPlaygroundElement() {
@@ -131,8 +137,6 @@ class Store {
     this.state.player.movement.start.timestamp = timestamp
     this.state.player.movement.start.x = x
     this.state.player.movement.start.y = y
-    this.state.player.movement.target.x = targetX
-    this.state.player.movement.target.y = targetY
   }
 
   confirmMovement() {
@@ -153,43 +157,47 @@ class Store {
     return { ...this.state.player.movement.start }
   }
 
-  getMovementTargetCoordinates() {
-    return { ...this.state.player.movement.target }
-  }
-
   getEnemies() {
     return this.state.enemies
   }
 
   setEnemy(enemy, timestamp) {
-    console.log('setEnemy: ', enemy)
-
     if (this.state.enemies.hasOwnProperty(enemy.id)) {
-      const existingEnemy = this.state.enemies[enemy.id]
-      existingEnemy.user = enemy
-      existingEnemy.movement = {
-        start: {
-          x: existingEnemy.x,
-          y: existingEnemy.y,
-          timestamp: timestamp,
+      let existingEnemy = this.state.enemies[enemy.id]
+      const {
+        user: { x, y },
+      } = existingEnemy
+      const positionDidNotChange = x === enemy.x && y === enemy.y
+
+      if (positionDidNotChange) {
+        return
+      }
+
+      this.state.enemies[enemy.id] = {
+        ...existingEnemy,
+        movement: {
+          direction: enemy.direction,
+          start: { x, y, timestamp },
         },
-        target: {
-          x: enemy.x,
-          y: enemy.y,
+        user: {
+          ...enemy,
         },
       }
     } else {
-      const enemyElement = document.createElement('div')
-      enemyElement.className = 'enemy'
-      this.getPlaygroundElement().appendChild(enemyElement)
-
       this.state.enemies[enemy.id] = {
         user: enemy,
-        element: enemyElement,
+        element: addEnemyElement(this.getPlaygroundElement()),
       }
     }
+  }
 
-    console.log('enemy state after update: ', this.state.enemies[enemy.id])
+  setEnemyCoordinates(id, x, y) {
+    this.state.enemies[id].user.x = x
+    this.state.enemies[id].user.y = y
+  }
+
+  resetEnemyMovement(id) {
+    delete this.state.enemies[id].movement
   }
 
   hasEnemies() {

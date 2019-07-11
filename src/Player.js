@@ -4,9 +4,11 @@ import {
   movePlaygroundToCoordinates,
   getTargetCoordinatesForDirection,
 } from './move'
-import { getUser, persistPlayerMove, getEnemies, userChanged } from './apollo'
+import { getUser, persistPlayerMove, initPlayer } from './apollo'
 import Store from './Store'
 import { getCurrentTimestamp, setUserIdToLocaleStorage } from './utils'
+import { loadEnemies } from './enemies'
+import Game from './game'
 
 export default class Player {
   constructor() {
@@ -16,42 +18,42 @@ export default class Player {
   async loadUser() {
     await getUser()
       .then(async result => {
-        console.log('Player created', result.data.user)
-
-        const { id, x, y } = result.data.user
-
+        console.log('Player created, ID = ', result.data.user)
+        const { id } = result.data.user
         this.id = id
+
+        Store.setPlayerId(id)
         setUserIdToLocaleStorage(id)
-        storePlayerData(result)
-        movePlaygroundToCoordinates(x, y)
+
+        await loadEnemies()
+
+        Store.setGame(new Game())
         Store.getPlaygroundElement().classList.add('playground--loaded')
-
-        this.loadEnemies()
-        userChanged(id).subscribe({
-          next(result) {
-            console.log('next', userChanged)
-            Store.setEnemy(result.data.userChanged)
-          },
-          error(err) {
-            console.log('error', err)
-          },
-        })
-
-        this.startGame()
       })
       .catch(error => console.log('getUser error', error))
   }
 
-  async loadEnemies() {
-    await getEnemies(Store.getPlayerId()).then(result => {
-      const enemies = result.data.enemies
-      for (let i = 0, l = enemies.length; i < l; i++) {
-        Store.setEnemy(enemies[i])
-      }
-    })
+  async startGame() {
+    console.log('start game')
+
+    await initPlayer(Store.getPlayerId())
+      .then(result => {
+        const { x, y } = result.data.start
+        Store.setCoordinates(x, y)
+        this.start()
+      })
+      .catch(error => console.log('initPlayer error', error))
   }
 
-  startGame() {
+  start() {
+    const { x, y } = Store.getCoordinates()
+    if (!x || !y) {
+      console.warn("Can't start game - player coordinates not set")
+      return
+    }
+
+    movePlaygroundToCoordinates(x, y)
+
     this.addPlayerToPlayground()
     this.initMovementEvents()
   }
@@ -113,11 +115,4 @@ export default class Player {
       Store.getPlayerElement().classList.remove('player_active')
     }
   }
-}
-
-const storePlayerData = result => {
-  const { id, x, y } = result.data.user
-
-  Store.setPlayerId(id)
-  Store.setCoordinates(x, y)
 }

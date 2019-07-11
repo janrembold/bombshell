@@ -2,34 +2,35 @@ import Store from './Store'
 import { settings } from './settings'
 import { easing } from './utils'
 import { DIRECTION, movePlaygroundToCoordinates } from './move'
-import Player from './Player'
+
+const setEnemyPosition = (enemy, left, top) => {
+  enemy.element.style.left = `${left}px`
+  enemy.element.style.top = `${top}px`
+}
 
 export default class Game {
   constructor() {
-    Store.setPlayer(new Player())
-    this.isAnimationActive = false
+    this.startLoop()
   }
 
-  start() {
-    this.isAnimationActive = true
+  startLoop() {
+    this.isLoopActive = true
     window.requestAnimationFrame(timestamp => this.loop(timestamp))
   }
 
-  stop() {
-    this.isAnimationActive = false
-  }
-
   loop(timestamp) {
-    if (this.isAnimationActive) {
+    if (this.isLoopActive) {
       window.requestAnimationFrame(timestamp => this.loop(timestamp))
     }
 
     const start = performance.now()
 
+    // TODO check if async calculation is better
     if (Store.isPlayerMoving()) {
       this.movePlayer(timestamp)
     }
 
+    // // TODO check if async calculation is better
     if (Store.hasEnemies()) {
       this.moveEnemies(timestamp)
     }
@@ -52,28 +53,70 @@ export default class Game {
   }
 
   moveEnemy(enemy, timestamp) {
-    if (false && enemy.hasOwnProperty('movement')) {
-      // moving
-      // TODO calculate new enemy coordinates
-      // TODO calculate relative position to player coordinates
-    } else {
-      // not moving
-      const { x, y } = Store.getCoordinates()
-      const { x: enemyX, y: enemyY } = enemy.user
-
-      const diffX = enemyX - x
-      const diffY = enemyY - y
-
-      const playgroundWidth = Store.getPlaygroundWidth()
-      const halfPlaygroundWidth = playgroundWidth / 2
-      const distance = settings.movementGrid * playgroundWidth
-
-      const left = distance * diffX + halfPlaygroundWidth
-      const top = distance * diffY + halfPlaygroundWidth
-
-      enemy.element.style.left = `${left}px`
-      enemy.element.style.top = `${top}px`
+    if (enemy.hasOwnProperty('movement')) {
+      this.calculateMovingEnemyCoordinates(enemy, timestamp)
     }
+
+    this.setEnemyPosition(enemy)
+  }
+
+  calculateMovingEnemyCoordinates(enemy, timestamp) {
+    const {
+      user: { id },
+      movement: {
+        direction,
+        start: { x, y, timestamp: startTimestamp },
+      },
+    } = enemy
+    const startTime = startTimestamp
+    const endTime = startTime + settings.movementDurationMs
+    const currentTime = timestamp - startTime
+    const isAnimationFinished = timestamp >= endTime
+    let newX = x
+    let newY = y
+
+    const distanceToMove = isAnimationFinished
+      ? 1
+      : easing(currentTime, 0, 1, settings.movementDurationMs)
+
+    switch (direction) {
+      case DIRECTION.north:
+        newY -= distanceToMove
+        break
+      case DIRECTION.south:
+        newY += distanceToMove
+        break
+      case DIRECTION.east:
+        newX += distanceToMove
+        break
+      case DIRECTION.west:
+        newX -= distanceToMove
+        break
+    }
+
+    Store.setEnemyCoordinates(id, newX, newY)
+
+    if (isAnimationFinished) {
+      Store.resetEnemyMovement(id)
+      console.log('enemy animation finished', enemy)
+    }
+  }
+
+  setEnemyPosition(enemy) {
+    const { x, y } = Store.getCoordinates()
+    const { x: enemyX, y: enemyY } = enemy.user
+
+    const diffX = enemyX - x
+    const diffY = enemyY - y
+
+    const playgroundWidth = Store.getPlaygroundWidth()
+    const halfPlaygroundWidth = playgroundWidth / 2
+    const distance = settings.movementGrid * playgroundWidth
+
+    const left = distance * diffX + halfPlaygroundWidth
+    const top = distance * diffY + halfPlaygroundWidth
+
+    setEnemyPosition(enemy, left, top)
   }
 
   movePlayer(timestamp) {

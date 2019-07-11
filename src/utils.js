@@ -25,3 +25,7 @@ export const getRandomInt = (min, max) => {
 
 export const setUserIdToLocaleStorage = id => localStorage.setItem('id', id)
 export const getUserIdFromLocaleStorage = () => localStorage.getItem('id')
+
+export const getDirectionFromCoordinates = () => {
+  return 666 //DIRECTION.north
+}
