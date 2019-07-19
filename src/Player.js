@@ -6,12 +6,17 @@ import {
 } from './move'
 import { getUser, persistPlayerMove, initPlayer } from './apollo'
 import Store from './Store'
-import { getCurrentTimestamp, setUserIdToLocaleStorage } from './utils'
+import {
+  getCurrentTimestamp,
+  setUserIdToLocaleStorage,
+  isUserOffline,
+} from './utils'
 import { loadEnemies } from './enemies'
 import Game from './game'
 
 export default class Player {
   constructor() {
+    console.log('init player')
     this.loadUser()
   }
 
@@ -19,7 +24,7 @@ export default class Player {
     await getUser()
       .then(async result => {
         console.log('Player created, ID = ', result.data.user)
-        const { id } = result.data.user
+        const { id, x, y } = result.data.user
         this.id = id
 
         Store.setPlayerId(id)
@@ -29,15 +34,22 @@ export default class Player {
 
         Store.setGame(new Game())
         Store.getPlaygroundElement().classList.add('playground--loaded')
+
+        if (!isUserOffline(result.data.user)) {
+          Store.setCoordinates(x, y)
+          this.start()
+        }
       })
       .catch(error => console.log('getUser error', error))
   }
 
   async startGame() {
-    console.log('start game')
+    console.log('init player', Store.getPlayerId())
 
-    await initPlayer(Store.getPlayerId())
+    initPlayer(Store.getPlayerId())
       .then(result => {
+        console.log('start game', result.data.start, result)
+
         const { x, y } = result.data.start
         Store.setCoordinates(x, y)
         this.start()
@@ -47,8 +59,8 @@ export default class Player {
 
   start() {
     const { x, y } = Store.getCoordinates()
-    if (!x || !y) {
-      console.warn("Can't start game - player coordinates not set")
+    if (isUserOffline({ x, y })) {
+      console.warn("Can't start game - player coordinates not set", Store.state)
       return
     }
 
@@ -56,21 +68,36 @@ export default class Player {
 
     this.addPlayerToPlayground()
     this.initMovementEvents()
+
+    document.querySelector('body').classList.add('playing')
+  }
+
+  stop() {
+    document.querySelector('body').classList.remove('playing')
+    this.removeMovementEvents()
   }
 
   addPlayerToPlayground() {
-    const playerElement = document.createElement('div')
-    playerElement.className = 'player'
+    if (!this.playerElement) {
+      this.playerElement = document.createElement('div')
+      this.playerElement.className = 'player'
 
-    Store.getPlaygroundElement().appendChild(playerElement)
-    Store.setPlayerElement(playerElement)
+      Store.getPlaygroundElement().appendChild(this.playerElement)
+      Store.setPlayerElement(this.playerElement)
+    }
+  }
+
+  removeMovementEvents() {
+    if (this.hammer) {
+      this.hammer.off('swipe tap')
+    }
   }
 
   initMovementEvents() {
-    const hammer = new Hammer(Store.getPlaygroundElement())
+    this.hammer = new Hammer(Store.getPlaygroundElement())
 
-    hammer.get('swipe').set({ direction: Hammer.DIRECTION_ALL })
-    hammer.on('swipe tap', event => {
+    this.hammer.get('swipe').set({ direction: Hammer.DIRECTION_ALL })
+    this.hammer.on('swipe tap', event => {
       event.preventDefault()
 
       const pointer = event.pointers[0]
@@ -98,11 +125,12 @@ export default class Player {
             Store.confirmMovement()
           })
 
-          // console.log('state', Store.state)
+          console.log('state', Store.state)
           break
 
         case 'swipe':
           // TODO throw bomb
+          console.log('you swiped - throw a bomb')
           break
       }
     })

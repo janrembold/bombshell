@@ -1,4 +1,5 @@
 import { addEnemyElement } from './htmlElement'
+import { isUserOffline } from './utils'
 
 class Store {
   constructor() {
@@ -112,6 +113,11 @@ class Store {
     this.state.player.coordinates.y = y
   }
 
+  resetCoordinates() {
+    this.state.player.coordinates.x = null
+    this.state.player.coordinates.y = null
+  }
+
   isPlayerMoving() {
     return !!this.state.player.movement.direction
   }
@@ -162,6 +168,11 @@ class Store {
   }
 
   setEnemy(enemy, timestamp) {
+    if (isUserOffline(enemy)) {
+      this.removeEnemy(enemy.id)
+      return
+    }
+
     if (this.state.enemies.hasOwnProperty(enemy.id)) {
       let existingEnemy = this.state.enemies[enemy.id]
       const {
@@ -198,6 +209,16 @@ class Store {
 
   resetEnemyMovement(id) {
     delete this.state.enemies[id].movement
+  }
+
+  removeEnemy(id) {
+    console.log('before remove enemy')
+
+    if (this.state.enemies[id]) {
+      console.log('remove enemy')
+      this.state.enemies[id].element.remove()
+      delete this.state.enemies[id]
+    }
   }
 
   hasEnemies() {

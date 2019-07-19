@@ -1,7 +1,6 @@
 import './styles.scss'
 import Store from './Store'
 import Player from './Player'
-import Game from './game'
 
 // TODO
 // - Start Button
@@ -18,7 +17,6 @@ import Game from './game'
 
 const playground = document.querySelector('.playground')
 const playButton = document.querySelector('.playButton')
-const body = document.querySelector('body')
 
 Store.setPlaygroundElement(playground)
 Store.setPlaygroundWidth()
@@ -28,5 +26,4 @@ Store.setPlayer(new Player())
 
 playButton.addEventListener('click', async () => {
   await Store.getPlayer().startGame()
-  body.classList.add('playing')
 })

@@ -44,7 +44,20 @@ const link = new RetryLink({
   httpLink,
 )
 
-export const client = new ApolloClient({ cache, link })
+export const client = new ApolloClient({
+  cache,
+  link,
+  defaultOptions: {
+    watchQuery: {
+      fetchPolicy: 'no-cache',
+      errorPolicy: 'ignore',
+    },
+    query: {
+      fetchPolicy: 'no-cache',
+      errorPolicy: 'all',
+    },
+  },
+})
 
 // creates new user with given name
 // returns id of newly created user
@@ -54,6 +67,8 @@ export const getUser = async () => {
       query User($id: Int) {
         user(id: $id) {
           id
+          x
+          y
         }
       }
     `,
@@ -91,12 +106,11 @@ export const getEnemies = async id => {
   })
 }
 
-export const usersChanged = id => {
+export const usersChanged = () => {
   return client.subscribe({
-    variables: { id },
     query: gql`
-      subscription UserChanged($id: Int!) {
-        userChanged(id: $id) {
+      subscription UserChanged {
+        userChanged {
           id
           x
           y

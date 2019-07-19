@@ -154,7 +154,7 @@ export default class Game {
 
     if (isAnimationFinished) {
       Store.resetMovementDirection()
-      console.log('animation finished', Store.state.player.coordinates)
+      // console.log('animation finished', Store.state.player.coordinates)
     }
   }
 }
